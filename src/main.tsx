@@ -5,10 +5,9 @@ import './lib/polyfills.ts';
 
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import App from './App.tsx';
+import '@fontsource-variable/inter';
+import '@fontsource-variable/space-grotesk';
 import './index.css';
-
-// FIXME: a custom font should be used. Eg:
-// import '@fontsource-variable/<font-name>';
 
 createRoot(document.getElementById("root")!).render(
   <ErrorBoundary>
