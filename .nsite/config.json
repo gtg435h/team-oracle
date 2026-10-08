@@ -1,0 +1,20 @@
+{
+  "relays": [
+    "wss://relay.nsite.lol",
+    "wss://relay.nosto.re",
+    "wss://relay.nostr.band",
+    "wss://relay.primal.net",
+    "wss://relay.damus.io",
+    "wss://purplerelay.com"
+  ],
+  "servers": [
+    "https://blossom.primal.net",
+    "https://cdn.sovbit.host"
+  ],
+  "id": "team-oracle",
+  "title": "team-oracle",
+  "fallback": "/index.html",
+  "gatewayHostnames": [
+    "nosto.re"
+  ]
+}
