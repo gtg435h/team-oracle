@@ -5,12 +5,10 @@ import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vitest/config";
 
 // https://vitejs.dev/config/
-export default defineConfig(({ command }) => ({
-  // When building for GitHub Pages the app is served from /<repo-name>/.
-  // VITE_BASE_URL can override this (e.g. for other deployment targets).
-  base: command === 'build'
-    ? (process.env.VITE_BASE_URL ?? '/team-oracle/')
-    : '/',
+export default defineConfig(() => ({
+  // Set VITE_BASE_URL env var when deploying to a sub-path (e.g. GitHub Pages).
+  // Leave unset (defaults to '/') for the Shakespeare preview and other root deploys.
+  base: process.env.VITE_BASE_URL ?? '/',
   server: {
     host: "::",
     port: 8080,
