@@ -3,6 +3,7 @@ import { useNostr } from '@nostrify/react';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useAppContext } from '@/hooks/useAppContext';
 import { parseBlossomServerList } from '@/lib/appBlossom';
+import { isAdmin } from '@/lib/market/constants';
 
 /**
  * NostrSync - Syncs user's Nostr data
@@ -18,7 +19,10 @@ export function NostrSync() {
   const { config, updateConfig } = useAppContext();
 
   useEffect(() => {
-    if (!user) return;
+    // Only admins are allowed to change the relay configuration.
+    // Non-admins always use the company's fixed relay; we must not let
+    // their personal NIP-65 list overwrite it.
+    if (!user || !isAdmin(user.pubkey)) return;
 
     const syncRelaysFromNostr = async () => {
       try {

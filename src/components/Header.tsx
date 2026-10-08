@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
-import { BarChart3, Briefcase, Menu, Plus, Settings, Trophy } from 'lucide-react';
+import { BarChart3, Briefcase, Menu, Plus, Settings, Trophy, Users } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -48,10 +48,16 @@ export function Header() {
             </NavLink>
           ))}
           {admin && (
-            <NavLink to="/create" className={navLinkClass}>
-              <Plus className="size-4" />
-              New market
-            </NavLink>
+            <>
+              <NavLink to="/create" className={navLinkClass}>
+                <Plus className="size-4" />
+                New market
+              </NavLink>
+              <NavLink to="/users" className={navLinkClass}>
+                <Users className="size-4" />
+                Users
+              </NavLink>
+            </>
           )}
         </nav>
 
@@ -104,19 +110,34 @@ export function Header() {
                   </NavLink>
                 ))}
                 {admin && (
-                  <NavLink
-                    to="/create"
-                    onClick={() => setMobileOpen(false)}
-                    className={({ isActive }) =>
-                      cn(
-                        'flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
-                        isActive ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted hover:text-foreground',
-                      )
-                    }
-                  >
-                    <Plus className="size-4.5" />
-                    New market
-                  </NavLink>
+                  <>
+                    <NavLink
+                      to="/create"
+                      onClick={() => setMobileOpen(false)}
+                      className={({ isActive }) =>
+                        cn(
+                          'flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                          isActive ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                        )
+                      }
+                    >
+                      <Plus className="size-4.5" />
+                      New market
+                    </NavLink>
+                    <NavLink
+                      to="/users"
+                      onClick={() => setMobileOpen(false)}
+                      className={({ isActive }) =>
+                        cn(
+                          'flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                          isActive ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                        )
+                      }
+                    >
+                      <Users className="size-4.5" />
+                      Users
+                    </NavLink>
+                  </>
                 )}
                 <NavLink
                   to="/settings"
