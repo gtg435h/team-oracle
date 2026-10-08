@@ -6,7 +6,7 @@ import type { RelayMetadata } from '@/contexts/AppContext';
  */
 export const APP_RELAYS: RelayMetadata = {
   relays: [
-    { url: 'wss://nostr.honeypoocakes.net', read: true, write: true },
+    { url: 'wss://173.211.12.30:50668', read: true, write: true },
   ],
   updatedAt: 0,
 };
