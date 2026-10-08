@@ -22,12 +22,14 @@ export function AccountSwitcher({ onAddAccountClick }: AccountSwitcherProps) {
   if (!currentUser) return null;
 
   const getDisplayName = (account: Account): string => {
-    return account.metadata.name ?? 'Anonymous';
+    return account.metadata.display_name?.trim()
+      || account.metadata.name?.trim()
+      || 'Anonymous';
   }
 
   // While the metadata query is in-flight and we don't yet have a name,
   // we don't want to flash a generated animal name / its first letter.
-  const isCurrentUserPending = isLoading && !currentUser.metadata.name;
+  const isCurrentUserPending = isLoading && !currentUser.metadata.display_name && !currentUser.metadata.name;
 
   return (
     <DropdownMenu modal={false}>
@@ -75,7 +77,7 @@ export function AccountSwitcher({ onAddAccountClick }: AccountSwitcherProps) {
           </Link>
         </DropdownMenuItem>
         {otherUsers.map((user) => {
-          const isPending = isLoading && !user.metadata.name;
+          const isPending = isLoading && !user.metadata.display_name && !user.metadata.name;
           return (
             <DropdownMenuItem
               key={user.id}
