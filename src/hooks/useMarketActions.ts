@@ -42,8 +42,14 @@ export function useMarketActions() {
   const { mutateAsync: publish } = useNostrPublish();
   const queryClient = useQueryClient();
 
-  const invalidate = () => {
-    queryClient.invalidateQueries({ queryKey: oracleEventsKey });
+  // Delay invalidation slightly so the caller can navigate first.
+  // Without this, invalidating immediately clears the cache before the
+  // new market page loads, causing MarketPage to briefly see an empty
+  // ledger and flash a 404.
+  const invalidate = (delayMs = 1500) => {
+    setTimeout(() => {
+      queryClient.invalidateQueries({ queryKey: oracleEventsKey });
+    }, delayMs);
   };
 
   /** Create a market. Returns the created event and its naddr. */

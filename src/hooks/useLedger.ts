@@ -48,7 +48,7 @@ export function useOracleEvents() {
  * derived by replaying the full trade history.
  */
 export function useLedger() {
-  const { data, isPending } = useOracleEvents();
+  const { data, isPending, isFetching } = useOracleEvents();
 
   const ledger = useMemo<Ledger | undefined>(() => {
     if (!data) return undefined;
@@ -77,5 +77,5 @@ export function useLedger() {
     return buildLedger(markets, trades, resolutions);
   }, [data]);
 
-  return { ledger, isPending };
+  return { ledger, isPending, isFetching };
 }

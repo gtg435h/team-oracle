@@ -27,7 +27,7 @@ import type { MarketState } from '@/lib/market/types';
 
 export default function MarketPage() {
   const { naddr } = useParams<{ naddr: string }>();
-  const { ledger, isPending } = useLedger();
+  const { ledger, isPending, isFetching } = useLedger();
   const { user } = useCurrentUser();
 
   const address = useMemo<string | null>(() => {
@@ -73,7 +73,7 @@ export default function MarketPage() {
           Markets
         </Link>
 
-        {isPending ? (
+        {isPending || (isFetching && !state) ? (
           <div className="mt-6 space-y-6">
             <Skeleton className="h-8 w-40 rounded-full" />
             <Skeleton className="h-12 w-3/4" />
