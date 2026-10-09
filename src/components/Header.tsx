@@ -8,7 +8,7 @@ import { LoginArea } from '@/components/auth/LoginArea';
 import { LogoMark } from '@/components/LogoMark';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { isAdmin, APP_NAME } from '@/lib/market/constants';
-import { canCreateMarket } from '@/hooks/useMarketCreators';
+import { useCanCreateMarket } from '@/hooks/useMarketCreators';
 import { cn } from '@/lib/utils';
 
 const NAV = [
@@ -29,7 +29,7 @@ function navLinkClass({ isActive }: { isActive: boolean }) {
 export function Header() {
   const { user } = useCurrentUser();
   const admin = isAdmin(user?.pubkey);
-  const creator = canCreateMarket(user?.pubkey);
+  const creator = useCanCreateMarket(user?.pubkey);
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (

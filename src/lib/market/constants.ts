@@ -16,6 +16,14 @@ export const TRADE_KIND = 3371;
 export const RESOLUTION_KIND = 1319;
 
 /**
+ * Addressable kind: admin-published list of pubkeys granted market-creation
+ * permission. Uses NIP-78 kind 30078 with d = "team-oracle:creator-grants".
+ * Only events authored by ADMIN_PUBKEYS are trusted.
+ */
+export const CREATOR_GRANT_KIND = 30078;
+export const CREATOR_GRANT_D_TAG = 'team-oracle:creator-grants';
+
+/**
  * Pubkeys allowed to create markets and (along with the market creator)
  * resolve them. Add your company's team leads here — edit this list and
  * redeploy. Only markets authored by these keys are shown in the app.

@@ -7,13 +7,33 @@ and positions by replaying and validating the public trade history.
 
 ## Kinds
 
-| Kind  | Range       | Purpose                       |
-| ----- | ----------- | ----------------------------- |
-| 39179 | Addressable | Prediction market             |
-| 3371  | Regular     | Trade (buy/sell YES/NO shares)|
-| 1319  | Regular     | Market resolution             |
+| Kind  | Range       | Purpose                            |
+| ----- | ----------- | ---------------------------------- |
+| 39179 | Addressable | Prediction market                  |
+| 3371  | Regular     | Trade (buy/sell YES/NO shares)     |
+| 1319  | Regular     | Market resolution                  |
+| 30078 | Addressable | Market creator grant list (NIP-78) |
 
-All three kinds carry a NIP-31 `alt` tag with a human-readable description.
+All kinds carry a NIP-31 `alt` tag with a human-readable description.
+
+## Kind 30078 — Market Creator Grants (NIP-78 addressable)
+
+Coordinate: `30078:<admin-pubkey>:team-oracle:creator-grants`. Each admin
+maintains their own grant list; the client takes the union across all admins.
+
+Tags:
+
+| Tag   | Required | Value                                      |
+| ----- | -------- | ------------------------------------------ |
+| `d`   | yes      | `team-oracle:creator-grants`               |
+| `p`   | no       | One tag per granted pubkey (zero or more)  |
+| `alt` | yes      | `Team Oracle: market creator grants`       |
+
+`content`: empty.
+
+Publishing a new event replaces the previous one (addressable semantics).
+To revoke all grants, publish with no `p` tags. Only events authored by
+`ADMIN_PUBKEYS` are trusted by the client.
 
 ## Kind 39179 — Market (addressable)
 

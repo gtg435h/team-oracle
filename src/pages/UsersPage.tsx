@@ -14,7 +14,7 @@ import { UserChip } from '@/components/market/UserChip';
 import { LoginArea } from '@/components/auth/LoginArea';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useLedger } from '@/hooks/useLedger';
-import { useMarketCreators } from '@/hooks/useMarketCreators';
+import { useMarketCreatorAdmin } from '@/hooks/useMarketCreators';
 import { isAdmin, ADMIN_PUBKEYS } from '@/lib/market/constants';
 import { formatRelative } from '@/lib/market/format';
 import { toast } from '@/hooks/useToast';
@@ -54,7 +54,7 @@ export default function UsersPage() {
   const { user } = useCurrentUser();
   const admin = isAdmin(user?.pubkey);
   const { ledger, isPending } = useLedger();
-  const { creators, toggle: toggleCreator } = useMarketCreators();
+  const { grants: creators, toggle: toggleCreator, isPending: grantsPending } = useMarketCreatorAdmin();
 
   const [seenUsers, setSeenUsers] = useState<Set<string>>(getSeenUsers);
   const notifiedRef = useRef(false);
@@ -118,13 +118,16 @@ export default function UsersPage() {
     });
   }
 
-  function handleToggleCreator(pubkey: string, name: string) {
-    const wasCreator = creators.has(pubkey);
-    toggleCreator(pubkey);
-    toast({
-      title: wasCreator ? 'Market creation revoked' : 'Market creation granted',
-      description: `${name} can ${wasCreator ? 'no longer' : 'now'} create markets.`,
-    });
+  async function handleToggleCreator(pubkey: string) {
+    try {
+      await toggleCreator(pubkey);
+    } catch (err) {
+      toast({
+        title: 'Failed to update permission',
+        description: err instanceof Error ? err.message : 'Please try again.',
+        variant: 'destructive',
+      });
+    }
   }
 
   const newCount = rows.filter((r) => r.isNew).length;
@@ -256,7 +259,8 @@ export default function UsersPage() {
                               <div className="flex items-center justify-center">
                                 <Switch
                                   checked={isCreator}
-                                  onCheckedChange={() => handleToggleCreator(row.pubkey, row.pubkey.slice(0, 8) + '…')}
+                                  disabled={grantsPending}
+                                  onCheckedChange={() => handleToggleCreator(row.pubkey)}
                                   aria-label="Toggle market creation permission"
                                 />
                               </div>

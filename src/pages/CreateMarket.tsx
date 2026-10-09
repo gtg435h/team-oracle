@@ -22,7 +22,7 @@ import { Chip } from '@/components/market/Chip';
 import { LoginArea } from '@/components/auth/LoginArea';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useMarketActions } from '@/hooks/useMarketActions';
-import { canCreateMarket } from '@/hooks/useMarketCreators';
+import { useCanCreateMarket } from '@/hooks/useMarketCreators';
 import { toast } from '@/hooks/useToast';
 import { formatDate, fromLocalInputValue, toLocalInputValue } from '@/lib/market/format';
 import { cn } from '@/lib/utils';
@@ -53,7 +53,7 @@ export default function CreateMarket() {
   });
 
   const { user } = useCurrentUser();
-  const creator = canCreateMarket(user?.pubkey);
+  const creator = useCanCreateMarket(user?.pubkey);
   const { createMarket } = useMarketActions();
   const navigate = useNavigate();
 
