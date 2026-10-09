@@ -167,7 +167,7 @@ export default function UsersPage() {
             <p className="mt-2 max-w-xl text-muted-foreground">
               Every user who has placed a trade needs write access to{' '}
               <span className="font-mono text-sm text-foreground">
-                173.211.12.30:50668
+                nostr.honeypoocakes.net:50668
               </span>
               . Export this list and import it into your relay's pubkey whitelist.
             </p>
