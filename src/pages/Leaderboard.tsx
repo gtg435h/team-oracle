@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useSeoMeta } from '@unhead/react';
-import { Crown, Trophy } from 'lucide-react';
+import { Crown, Lock, Trophy } from 'lucide-react';
 
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { UserChip } from '@/components/market/UserChip';
+import { LoginArea } from '@/components/auth/LoginArea';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useLedger } from '@/hooks/useLedger';
 import { netWorth } from '@/lib/market/ledger';
@@ -77,7 +78,22 @@ export default function Leaderboard() {
         </div>
 
         <div className="mt-8">
-          {isPending ? (
+          {!user ? (
+            <Card className="border-dashed">
+              <CardContent className="flex flex-col items-center px-8 py-16 text-center">
+                <div className="flex size-14 items-center justify-center rounded-full bg-muted">
+                  <Lock className="size-6 text-muted-foreground" />
+                </div>
+                <h2 className="mt-5 font-display text-xl font-bold tracking-tight">
+                  Sign in to see the rankings
+                </h2>
+                <p className="mt-2 max-w-sm text-muted-foreground">
+                  The leaderboard is only visible to team members. Sign in with your Nostr key to see how you rank.
+                </p>
+                <LoginArea className="mt-6 max-w-xs w-full" />
+              </CardContent>
+            </Card>
+          ) : isPending ? (
             <div className="space-y-3">
               {Array.from({ length: 6 }, (_, i) => (
                 <Skeleton key={i} className="h-16 rounded-xl" />

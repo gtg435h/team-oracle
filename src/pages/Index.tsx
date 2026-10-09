@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useSeoMeta } from '@unhead/react';
-import { ArrowLeftRight, CheckCircle2, Gavel, Plus, Search, TrendingUp, Users } from 'lucide-react';
+import { ArrowLeftRight, CheckCircle2, Gavel, Lock, Plus, Search, TrendingUp, Users } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -18,6 +18,7 @@ import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { MarketCard } from '@/components/market/MarketCard';
 import { Chip } from '@/components/market/Chip';
+import { LoginArea } from '@/components/auth/LoginArea';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useLedger } from '@/hooks/useLedger';
 import { isAdmin } from '@/lib/market/constants';
@@ -173,122 +174,143 @@ export default function Index() {
 
         {/* Markets */}
         <section className="container py-10">
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <h2 className="font-display text-2xl font-bold tracking-tight">Open markets</h2>
-              <div className="sm:ml-auto flex flex-col gap-3 sm:flex-row sm:items-center">
-                <div className="relative">
-                  <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Search markets…"
-                    className="w-full pl-9 sm:w-64"
-                    aria-label="Search markets"
-                  />
+          {!user ? (
+            /* ── Logged-out gate ── */
+            <Card className="border-dashed">
+              <CardContent className="flex flex-col items-center px-8 py-16 text-center">
+                <div className="flex size-14 items-center justify-center rounded-full bg-muted">
+                  <Lock className="size-6 text-muted-foreground" />
                 </div>
-                <Select value={sort} onValueChange={(v) => setSort(v as SortKey)}>
-                  <SelectTrigger className="w-full sm:w-44" aria-label="Sort markets">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {SORTS.map((s) => (
-                      <SelectItem key={s.value} value={s.value}>
-                        {s.label}
-                      </SelectItem>
+                <h2 className="mt-5 font-display text-xl font-bold tracking-tight">
+                  Sign in to see markets
+                </h2>
+                <p className="mt-2 max-w-sm text-muted-foreground">
+                  Team Oracle is for employees only. Sign in with your Nostr key to browse and trade on open markets.
+                </p>
+                <LoginArea className="mt-6 max-w-xs w-full" />
+              </CardContent>
+            </Card>
+          ) : (
+            /* ── Logged-in markets view ── */
+            <>
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <h2 className="font-display text-2xl font-bold tracking-tight">Open markets</h2>
+                  <div className="sm:ml-auto flex flex-col gap-3 sm:flex-row sm:items-center">
+                    <div className="relative">
+                      <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        placeholder="Search markets…"
+                        className="w-full pl-9 sm:w-64"
+                        aria-label="Search markets"
+                      />
+                    </div>
+                    <Select value={sort} onValueChange={(v) => setSort(v as SortKey)}>
+                      <SelectTrigger className="w-full sm:w-44" aria-label="Sort markets">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {SORTS.map((s) => (
+                          <SelectItem key={s.value} value={s.value}>
+                            {s.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {allTags.length > 0 && (
+                  <div className="flex flex-wrap gap-2" role="group" aria-label="Filter by tag">
+                    <button type="button" onClick={() => setTag('all')}>
+                      <Chip
+                        className={cn(
+                          'cursor-pointer transition-colors',
+                          tag === 'all'
+                            ? 'border-primary bg-primary text-primary-foreground'
+                            : 'border-border bg-card text-muted-foreground hover:bg-muted',
+                        )}
+                      >
+                        All
+                      </Chip>
+                    </button>
+                    {allTags.map((t) => (
+                      <button key={t} type="button" onClick={() => setTag(t)}>
+                        <Chip
+                          className={cn(
+                            'cursor-pointer transition-colors',
+                            tag === t
+                              ? 'border-primary bg-primary text-primary-foreground'
+                              : 'border-border bg-card text-muted-foreground hover:bg-muted',
+                          )}
+                        >
+                          {t}
+                        </Chip>
+                      </button>
                     ))}
-                  </SelectContent>
-                </Select>
+                  </div>
+                )}
               </div>
-            </div>
 
-            {allTags.length > 0 && (
-              <div className="flex flex-wrap gap-2" role="group" aria-label="Filter by tag">
-                <button type="button" onClick={() => setTag('all')}>
-                  <Chip
-                    className={cn(
-                      'cursor-pointer transition-colors',
-                      tag === 'all'
-                        ? 'border-primary bg-primary text-primary-foreground'
-                        : 'border-border bg-card text-muted-foreground hover:bg-muted',
-                    )}
-                  >
-                    All
-                  </Chip>
-                </button>
-                {allTags.map((t) => (
-                  <button key={t} type="button" onClick={() => setTag(t)}>
-                    <Chip
-                      className={cn(
-                        'cursor-pointer transition-colors',
-                        tag === t
-                          ? 'border-primary bg-primary text-primary-foreground'
-                          : 'border-border bg-card text-muted-foreground hover:bg-muted',
+              <div className="mt-6">
+                {isPending ? (
+                  <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                    {Array.from({ length: 6 }, (_, i) => (
+                      <MarketCardSkeleton key={i} />
+                    ))}
+                  </div>
+                ) : states.length === 0 ? (
+                  <Card className="border-dashed">
+                    <CardContent className="px-8 py-14 text-center">
+                      <p className="mx-auto max-w-sm text-muted-foreground">
+                        No markets yet.{' '}
+                        {admin
+                          ? 'Create the first market and let the forecasts roll in.'
+                          : "Team leads haven't posted any questions yet — check back soon."}
+                      </p>
+                      {admin && (
+                        <Button asChild className="mt-4 gap-2 rounded-full">
+                          <Link to="/create">
+                            <Plus className="size-4" />
+                            Create the first market
+                          </Link>
+                        </Button>
                       )}
-                    >
-                      {t}
-                    </Chip>
-                  </button>
-                ))}
+                    </CardContent>
+                  </Card>
+                ) : filtered.length === 0 ? (
+                  <Card className="border-dashed">
+                    <CardContent className="px-8 py-14 text-center">
+                      <p className="mx-auto max-w-sm text-muted-foreground">
+                        No open markets match. Try clearing the search or picking another tag.
+                      </p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                    {filtered.map((state) => (
+                      <MarketCard key={state.market.address} state={state} />
+                    ))}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
 
-          <div className="mt-6">
-            {isPending ? (
-              <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-                {Array.from({ length: 6 }, (_, i) => (
-                  <MarketCardSkeleton key={i} />
-                ))}
-              </div>
-            ) : states.length === 0 ? (
-              <Card className="border-dashed">
-                <CardContent className="px-8 py-14 text-center">
-                  <p className="mx-auto max-w-sm text-muted-foreground">
-                    No markets yet.{' '}
-                    {admin
-                      ? 'Create the first market and let the forecasts roll in.'
-                      : "Team leads haven't posted any questions yet — check back soon."}
-                  </p>
-                  {admin && (
-                    <Button asChild className="mt-4 gap-2 rounded-full">
-                      <Link to="/create">
-                        <Plus className="size-4" />
-                        Create the first market
-                      </Link>
-                    </Button>
-                  )}
-                </CardContent>
-              </Card>
-            ) : filtered.length === 0 ? (
-              <Card className="border-dashed">
-                <CardContent className="px-8 py-14 text-center">
-                  <p className="mx-auto max-w-sm text-muted-foreground">
-                    No open markets match. Try clearing the search or picking another tag.
-                  </p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-                {filtered.map((state) => (
-                  <MarketCard key={state.market.address} state={state} />
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Recently resolved */}
-          {resolvedStates.length > 0 && (
-            <div className="mt-12">
-              <div className="flex items-center gap-3">
-                <h2 className="font-display text-2xl font-bold tracking-tight">Recently resolved</h2>
-              </div>
-              <div className="mt-5 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-                {resolvedStates.map((state) => (
-                  <MarketCard key={state.market.address} state={state} />
-                ))}
-              </div>
-            </div>
+              {/* Recently resolved */}
+              {resolvedStates.length > 0 && (
+                <div className="mt-12">
+                  <div className="flex items-center gap-3">
+                    <h2 className="font-display text-2xl font-bold tracking-tight">Recently resolved</h2>
+                  </div>
+                  <div className="mt-5 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                    {resolvedStates.map((state) => (
+                      <MarketCard key={state.market.address} state={state} />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
           )}
 
           {/* How it works */}

@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useSeoMeta } from '@unhead/react';
 import { nip19 } from 'nostr-tools';
-import { ArrowLeft, Clock } from 'lucide-react';
+import { ArrowLeft, Clock, Lock } from 'lucide-react';
 
 import NotFound from './NotFound';
 import { Header } from '@/components/Header';
@@ -17,6 +17,7 @@ import { PositionCard } from '@/components/market/PositionCard';
 import { ResolveSection } from '@/components/market/ResolveSection';
 import { ActivityFeed } from '@/components/market/ActivityFeed';
 import { UserChip } from '@/components/market/UserChip';
+import { LoginArea } from '@/components/auth/LoginArea';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useLedger } from '@/hooks/useLedger';
 import { marketStatus } from '@/lib/market/ledger';
@@ -73,7 +74,24 @@ export default function MarketPage() {
           Markets
         </Link>
 
-        {isPending || (isFetching && !state) ? (
+        {!user ? (
+          <div className="mt-10 flex justify-center">
+            <Card className="w-full max-w-md border-dashed">
+              <CardContent className="flex flex-col items-center px-8 py-16 text-center">
+                <div className="flex size-14 items-center justify-center rounded-full bg-muted">
+                  <Lock className="size-6 text-muted-foreground" />
+                </div>
+                <h2 className="mt-5 font-display text-xl font-bold tracking-tight">
+                  Sign in to view this market
+                </h2>
+                <p className="mt-2 max-w-sm text-muted-foreground">
+                  This market is only visible to team members. Sign in with your Nostr key to continue.
+                </p>
+                <LoginArea className="mt-6 max-w-xs w-full" />
+              </CardContent>
+            </Card>
+          </div>
+        ) : isPending || (isFetching && !state) ? (
           <div className="mt-6 space-y-6">
             <Skeleton className="h-8 w-40 rounded-full" />
             <Skeleton className="h-12 w-3/4" />
