@@ -1,5 +1,6 @@
 import { useSeoMeta } from '@unhead/react';
 import { Lock, ShieldCheck, Wifi } from 'lucide-react';
+import { Navigate } from 'react-router-dom';
 
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
@@ -55,6 +56,9 @@ export default function Settings() {
 
   const { user } = useCurrentUser();
   const admin = isAdmin(user?.pubkey);
+
+  // Non-admins have no business here — send them home silently.
+  if (!admin) return <Navigate to="/" replace />;
 
   return (
     <div className="flex min-h-screen flex-col bg-background">

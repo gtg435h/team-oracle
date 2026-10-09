@@ -12,6 +12,7 @@ import {
   TRADES_LIMIT,
   TRADE_KIND,
 } from '@/lib/market/constants';
+import { getMarketCreators } from '@/lib/market/creators';
 import {
   buildLedger,
   parseMarketEvent,
@@ -27,13 +28,17 @@ export const oracleEventsKey = ['oracle', 'events'] as const;
 export function useOracleEvents() {
   const { nostr } = useNostr();
 
+  // Trusted market authors = hardcoded admins + any pubkeys an admin has
+  // granted market-creation permission to (stored in localStorage).
+  const trustedAuthors = [...new Set([...ADMIN_PUBKEYS, ...getMarketCreators()])];
+
   return useQuery({
     queryKey: oracleEventsKey,
     queryFn: ({ signal }) =>
       nostr.query(
         [
-          // Only markets authored by admins are trusted (see NIP.md).
-          { kinds: [MARKET_KIND], authors: [...ADMIN_PUBKEYS], limit: MARKETS_LIMIT },
+          // Only fetch markets from trusted authors (admins + granted creators).
+          { kinds: [MARKET_KIND], authors: trustedAuthors, limit: MARKETS_LIMIT },
           { kinds: [TRADE_KIND], limit: TRADES_LIMIT },
           { kinds: [RESOLUTION_KIND], limit: RESOLUTIONS_LIMIT },
         ],

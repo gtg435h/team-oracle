@@ -8,6 +8,7 @@ import { LoginArea } from '@/components/auth/LoginArea';
 import { LogoMark } from '@/components/LogoMark';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { isAdmin, APP_NAME } from '@/lib/market/constants';
+import { canCreateMarket } from '@/hooks/useMarketCreators';
 import { cn } from '@/lib/utils';
 
 const NAV = [
@@ -28,6 +29,7 @@ function navLinkClass({ isActive }: { isActive: boolean }) {
 export function Header() {
   const { user } = useCurrentUser();
   const admin = isAdmin(user?.pubkey);
+  const creator = canCreateMarket(user?.pubkey);
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
@@ -47,32 +49,34 @@ export function Header() {
               {item.label}
             </NavLink>
           ))}
+          {creator && (
+            <NavLink to="/create" className={navLinkClass}>
+              <Plus className="size-4" />
+              New market
+            </NavLink>
+          )}
           {admin && (
-            <>
-              <NavLink to="/create" className={navLinkClass}>
-                <Plus className="size-4" />
-                New market
-              </NavLink>
-              <NavLink to="/users" className={navLinkClass}>
-                <Users className="size-4" />
-                Users
-              </NavLink>
-            </>
+            <NavLink to="/users" className={navLinkClass}>
+              <Users className="size-4" />
+              Users
+            </NavLink>
           )}
         </nav>
 
         <div className="ml-auto flex items-center gap-2">
-          <Button
-            asChild
-            variant="ghost"
-            size="icon"
-            className="hidden rounded-full text-muted-foreground hover:text-foreground sm:inline-flex"
-            aria-label="Settings"
-          >
-            <Link to="/settings">
-              <Settings className="size-4.5" />
-            </Link>
-          </Button>
+          {admin && (
+            <Button
+              asChild
+              variant="ghost"
+              size="icon"
+              className="hidden rounded-full text-muted-foreground hover:text-foreground sm:inline-flex"
+              aria-label="Settings"
+            >
+              <Link to="/settings">
+                <Settings className="size-4.5" />
+              </Link>
+            </Button>
+          )}
           <LoginArea className="max-w-52" />
 
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
@@ -109,44 +113,51 @@ export function Header() {
                     {item.label}
                   </NavLink>
                 ))}
-                {admin && (
-                  <>
-                    <NavLink
-                      to="/create"
-                      onClick={() => setMobileOpen(false)}
-                      className={({ isActive }) =>
-                        cn(
-                          'flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
-                          isActive ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted hover:text-foreground',
-                        )
-                      }
-                    >
-                      <Plus className="size-4.5" />
-                      New market
-                    </NavLink>
-                    <NavLink
-                      to="/users"
-                      onClick={() => setMobileOpen(false)}
-                      className={({ isActive }) =>
-                        cn(
-                          'flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
-                          isActive ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted hover:text-foreground',
-                        )
-                      }
-                    >
-                      <Users className="size-4.5" />
-                      Users
-                    </NavLink>
-                  </>
+                {creator && (
+                  <NavLink
+                    to="/create"
+                    onClick={() => setMobileOpen(false)}
+                    className={({ isActive }) =>
+                      cn(
+                        'flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                        isActive ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                      )
+                    }
+                  >
+                    <Plus className="size-4.5" />
+                    New market
+                  </NavLink>
                 )}
-                <NavLink
-                  to="/settings"
-                  onClick={() => setMobileOpen(false)}
-                  className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                >
-                  <Settings className="size-4.5" />
-                  Settings
-                </NavLink>
+                {admin && (
+                  <NavLink
+                    to="/users"
+                    onClick={() => setMobileOpen(false)}
+                    className={({ isActive }) =>
+                      cn(
+                        'flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                        isActive ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                      )
+                    }
+                  >
+                    <Users className="size-4.5" />
+                    Users
+                  </NavLink>
+                )}
+                {admin && (
+                  <NavLink
+                    to="/settings"
+                    onClick={() => setMobileOpen(false)}
+                    className={({ isActive }) =>
+                      cn(
+                        'flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                        isActive ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                      )
+                    }
+                  >
+                    <Settings className="size-4.5" />
+                    Settings
+                  </NavLink>
+                )}
               </nav>
               <div className="mt-6 border-t pt-4">
                 <LoginArea className="w-full [&>button]:w-full" />

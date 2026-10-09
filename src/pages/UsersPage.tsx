@@ -1,18 +1,20 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSeoMeta } from '@unhead/react';
-import { Download, Shield, Users } from 'lucide-react';
+import { Download, Shield, Users, TrendingUp } from 'lucide-react';
 
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Switch } from '@/components/ui/switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Chip } from '@/components/market/Chip';
 import { UserChip } from '@/components/market/UserChip';
 import { LoginArea } from '@/components/auth/LoginArea';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useLedger } from '@/hooks/useLedger';
+import { useMarketCreators } from '@/hooks/useMarketCreators';
 import { isAdmin, ADMIN_PUBKEYS } from '@/lib/market/constants';
 import { formatRelative } from '@/lib/market/format';
 import { toast } from '@/hooks/useToast';
@@ -46,21 +48,19 @@ interface UserRow {
 export default function UsersPage() {
   useSeoMeta({
     title: 'User Registry — Team Oracle',
-    description: 'All registered users — export pubkeys for relay whitelist.',
+    description: 'All registered users — manage permissions and export relay whitelist.',
   });
 
   const { user } = useCurrentUser();
   const admin = isAdmin(user?.pubkey);
   const { ledger, isPending } = useLedger();
+  const { creators, toggle: toggleCreator } = useMarketCreators();
 
-  // Track which pubkeys we've seen before to flag new arrivals.
   const [seenUsers, setSeenUsers] = useState<Set<string>>(getSeenUsers);
   const notifiedRef = useRef(false);
 
   const rows = useMemo<UserRow[]>(() => {
     if (!ledger) return [];
-
-    // Collect first-trade timestamp per pubkey from validTrades.
     const firstTrade = new Map<string, number>();
     const tradeCounts = new Map<string, number>();
     for (const trade of ledger.validTrades) {
@@ -70,7 +70,6 @@ export default function UsersPage() {
       }
       tradeCounts.set(trade.pubkey, (tradeCounts.get(trade.pubkey) ?? 0) + 1);
     }
-
     return [...firstTrade.keys()]
       .map((pubkey) => ({
         pubkey,
@@ -81,52 +80,50 @@ export default function UsersPage() {
       .sort((a, b) => a.firstTradeAt - b.firstTradeAt);
   }, [ledger, seenUsers]);
 
-  // Notify admin of any new users since they last visited, then mark all as seen.
+  // Notify + mark seen on first load.
   useEffect(() => {
     if (!admin || isPending || rows.length === 0 || notifiedRef.current) return;
     notifiedRef.current = true;
-
     const newUsers = rows.filter((r) => r.isNew);
     if (newUsers.length > 0) {
       toast({
         title: `${newUsers.length} new user${newUsers.length === 1 ? '' : 's'} registered`,
-        description: `Add their pubkeys to your relay whitelist to grant access.`,
+        description: 'Add their pubkeys to your relay whitelist to grant access.',
       });
     }
-
-    // Mark all current users as seen.
     const updated = new Set([...seenUsers, ...rows.map((r) => r.pubkey)]);
     setSeenUsers(updated);
     saveSeenUsers(updated);
   }, [admin, isPending, rows, seenUsers]);
 
-  // All pubkeys that need relay access: traders + admins.
   const allPubkeys = useMemo(() => {
     const set = new Set([...ADMIN_PUBKEYS, ...rows.map((r) => r.pubkey)]);
     return [...set];
   }, [rows]);
 
   function exportWhitelist() {
-    const lines = allPubkeys.join('\n');
-    const blob = new Blob([lines], { type: 'text/plain' });
+    const blob = new Blob([allPubkeys.join('\n')], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = 'relay-whitelist.txt';
     a.click();
     URL.revokeObjectURL(url);
-    toast({
-      title: 'Whitelist exported',
-      description: `${allPubkeys.length} pubkeys saved to relay-whitelist.txt`,
-    });
+    toast({ title: 'Whitelist exported', description: `${allPubkeys.length} pubkeys saved to relay-whitelist.txt` });
   }
 
   function copyWhitelist() {
     navigator.clipboard.writeText(allPubkeys.join('\n')).then(() => {
-      toast({
-        title: 'Copied to clipboard',
-        description: `${allPubkeys.length} pubkeys copied.`,
-      });
+      toast({ title: 'Copied to clipboard', description: `${allPubkeys.length} pubkeys copied.` });
+    });
+  }
+
+  function handleToggleCreator(pubkey: string, name: string) {
+    const wasCreator = creators.has(pubkey);
+    toggleCreator(pubkey);
+    toast({
+      title: wasCreator ? 'Market creation revoked' : 'Market creation granted',
+      description: `${name} can ${wasCreator ? 'no longer' : 'now'} create markets.`,
     });
   }
 
@@ -165,14 +162,9 @@ export default function UsersPage() {
               User Registry
             </h1>
             <p className="mt-2 max-w-xl text-muted-foreground">
-              Every user who has placed a trade needs write access to{' '}
-              <span className="font-mono text-sm text-foreground">
-                nostr.honeypoocakes.net:50668
-              </span>
-              . Export this list and import it into your relay's pubkey whitelist.
+              Manage market creation permissions and export pubkeys for your relay whitelist.
             </p>
           </div>
-
           <div className="flex gap-2">
             <Button variant="outline" className="gap-2" onClick={copyWhitelist} disabled={allPubkeys.length === 0}>
               Copy pubkeys
@@ -195,6 +187,12 @@ export default function UsersPage() {
           <Chip className="border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-400">
             {rows.length} trader{rows.length === 1 ? '' : 's'}
           </Chip>
+          {creators.size > 0 && (
+            <Chip className="border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-500/30 dark:bg-violet-500/10 dark:text-violet-400">
+              <TrendingUp className="size-3" />
+              {creators.size} market creator{creators.size === 1 ? '' : 's'}
+            </Chip>
+          )}
           {newCount > 0 && (
             <Chip className="border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-400">
               ✦ {newCount} new since last visit
@@ -225,36 +223,54 @@ export default function UsersPage() {
                     <TableRow>
                       <TableHead>User</TableHead>
                       <TableHead className="hidden sm:table-cell">Pubkey (hex)</TableHead>
+                      <TableHead className="text-center">Can create markets</TableHead>
                       <TableHead className="hidden md:table-cell text-right">Trades</TableHead>
-                      <TableHead className="text-right">First trade</TableHead>
+                      <TableHead className="text-right">Joined</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {rows.map((row) => (
-                      <TableRow key={row.pubkey}>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <UserChip pubkey={row.pubkey} />
-                            {row.isNew && (
-                              <Chip className="border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-400 text-[10px]">
-                                New
-                              </Chip>
+                    {rows.map((row) => {
+                      const isCreator = creators.has(row.pubkey);
+                      const isAdminUser = isAdmin(row.pubkey);
+                      return (
+                        <TableRow key={row.pubkey}>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <UserChip pubkey={row.pubkey} />
+                              {row.isNew && (
+                                <Chip className="border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-400 text-[10px]">
+                                  New
+                                </Chip>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="hidden sm:table-cell">
+                            <span className="font-mono text-xs text-muted-foreground select-all">
+                              {row.pubkey}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {isAdminUser ? (
+                              <span className="text-xs text-muted-foreground">Always (admin)</span>
+                            ) : (
+                              <div className="flex items-center justify-center">
+                                <Switch
+                                  checked={isCreator}
+                                  onCheckedChange={() => handleToggleCreator(row.pubkey, row.pubkey.slice(0, 8) + '…')}
+                                  aria-label="Toggle market creation permission"
+                                />
+                              </div>
                             )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="hidden sm:table-cell">
-                          <span className="font-mono text-xs text-muted-foreground select-all">
-                            {row.pubkey}
-                          </span>
-                        </TableCell>
-                        <TableCell className="hidden md:table-cell text-right tabular-nums text-muted-foreground">
-                          {row.tradeCount}
-                        </TableCell>
-                        <TableCell className="text-right text-sm text-muted-foreground">
-                          {formatRelative(row.firstTradeAt)}
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                          </TableCell>
+                          <TableCell className="hidden md:table-cell text-right tabular-nums text-muted-foreground">
+                            {row.tradeCount}
+                          </TableCell>
+                          <TableCell className="text-right text-sm text-muted-foreground">
+                            {formatRelative(row.firstTradeAt)}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               )}
@@ -298,14 +314,8 @@ export default function UsersPage() {
               <p className="font-semibold text-foreground">How to apply the whitelist</p>
               <ol className="mt-2 list-decimal space-y-1 pl-4">
                 <li>Click <strong>Export whitelist</strong> to download <code className="rounded bg-muted px-1">relay-whitelist.txt</code> — one hex pubkey per line.</li>
-                <li>
-                  On your strfry relay, add each pubkey to your whitelist policy or paste them
-                  into your allowlist config and reload the relay.
-                </li>
-                <li>
-                  Repeat whenever the <strong>New</strong> badge appears — you'll also see a
-                  notification at the top of this page when you visit after a new user joins.
-                </li>
+                <li>On your nostr-rs-relay (Start9), paste the pubkeys into the <code className="rounded bg-muted px-1">pubkey_whitelist</code> config array and ensure <code className="rounded bg-muted px-1">pubkey_whitelist_enabled = true</code>.</li>
+                <li>Repeat whenever the <strong>New</strong> badge appears — you'll get a notification when a new user joins.</li>
               </ol>
             </CardContent>
           </Card>

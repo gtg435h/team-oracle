@@ -22,8 +22,8 @@ import { Chip } from '@/components/market/Chip';
 import { LoginArea } from '@/components/auth/LoginArea';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useMarketActions } from '@/hooks/useMarketActions';
+import { canCreateMarket } from '@/hooks/useMarketCreators';
 import { toast } from '@/hooks/useToast';
-import { isAdmin } from '@/lib/market/constants';
 import { formatDate, fromLocalInputValue, toLocalInputValue } from '@/lib/market/format';
 import { cn } from '@/lib/utils';
 
@@ -53,7 +53,7 @@ export default function CreateMarket() {
   });
 
   const { user } = useCurrentUser();
-  const admin = isAdmin(user?.pubkey);
+  const creator = canCreateMarket(user?.pubkey);
   const { createMarket } = useMarketActions();
   const navigate = useNavigate();
 
@@ -125,8 +125,8 @@ export default function CreateMarket() {
             </h1>
             <p className="mx-auto mt-2 max-w-md text-muted-foreground">
               {!user
-                ? 'Market creation is limited to admins and team leads. Log in with an admin account to post questions.'
-                : 'Only team leads can post questions. Ask an admin to add your pubkey to the admin list (src/lib/market/constants.ts), or browse the open markets.'}
+                ? 'Market creation is limited to team leads. Log in with an authorised account to post questions.'
+                : 'Only authorised team leads can post questions. Ask an admin to grant you market creation access from the Users page.'}
             </p>
             <div className="mt-6 flex justify-center gap-3">
               {!user && <LoginArea className="w-full [&>button]:w-full" />}
@@ -141,7 +141,7 @@ export default function CreateMarket() {
     </div>
   );
 
-  if (!user || !admin) return gate;
+  if (!user || !creator) return gate;
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
