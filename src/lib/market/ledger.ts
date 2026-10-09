@@ -139,11 +139,28 @@ export function parseResolutionEvent(event: NostrEvent): Resolution | null {
  * 4. Resolution pays PAYOUT_PER_SHARE per winning share (50 per share on a
  *    void), then closes the position.
  */
-export function buildLedger(markets: Market[], trades: Trade[], resolutions: Resolution[]): Ledger {
+/**
+ * Replays the full trade history into a validated ledger.
+ *
+ * `trustedAuthors` is the set of pubkeys allowed to author markets. Markets
+ * from authors not in this set are silently ignored. Pass the union of
+ * ADMIN_PUBKEYS and the current grant list. Importantly, this should include
+ * *all ever-granted* pubkeys (not just currently-granted) so that revoking a
+ * grant does not retroactively invalidate markets already created — only new
+ * markets from non-trusted authors are rejected.
+ */
+export function buildLedger(
+  markets: Market[],
+  trades: Trade[],
+  resolutions: Resolution[],
+  trustedAuthors?: Set<string>,
+): Ledger {
   // --- Markets: latest version per address wins; track earliest created_at. ---
   const latestMarket = new Map<string, Market>();
   const openedAt = new Map<string, number>();
   for (const m of markets) {
+    // Skip markets from untrusted authors if a trust set is provided.
+    if (trustedAuthors && !trustedAuthors.has(m.pubkey)) continue;
     const existing = latestMarket.get(m.address);
     if (!existing || m.createdAt > existing.createdAt || (m.createdAt === existing.createdAt && m.id > existing.id)) {
       latestMarket.set(m.address, m);

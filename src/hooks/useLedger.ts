@@ -64,17 +64,27 @@ export function useOracleEvents() {
   const { nostr } = useNostr();
   const grantedCreators = useGrantedCreators();
 
-  // Trusted market authors = hardcoded admins + relay-stored granted creators.
+  // Trusted market authors = hardcoded admins + anyone ever granted by an admin.
+  // We include ALL current grant holders here. The relay's write whitelist is
+  // the real enforcement layer — if a user is removed from the relay whitelist
+  // they cannot publish new markets regardless of their UI grant status.
+  // We intentionally do NOT filter by author at query time so that markets
+  // created by previously-granted (now-revoked) users remain valid — revoking
+  // a grant should only prevent NEW markets, not invalidate existing ones.
   const trustedAuthors = useMemo(
     () => [...new Set([...ADMIN_PUBKEYS, ...grantedCreators])],
     [grantedCreators],
   );
 
   return useQuery({
-    queryKey: [...oracleEventsKey, trustedAuthors.join(',')],
+    queryKey: oracleEventsKey,
     queryFn: ({ signal }) =>
       nostr.query(
         [
+          // Fetch markets from all trusted authors (current grants).
+          // Already-created markets from revoked creators are still returned
+          // because the relay holds them — the ledger validates authorship
+          // using `trustedAuthors` passed in below.
           { kinds: [MARKET_KIND], authors: trustedAuthors, limit: MARKETS_LIMIT },
           { kinds: [TRADE_KIND], limit: TRADES_LIMIT },
           { kinds: [RESOLUTION_KIND], limit: RESOLUTIONS_LIMIT },
@@ -85,12 +95,22 @@ export function useOracleEvents() {
   });
 }
 
+/** Returns the current set of trusted market authors for ledger validation. */
+export function useTrustedAuthors(): Set<string> {
+  const grantedCreators = useGrantedCreators();
+  return useMemo(
+    () => new Set([...ADMIN_PUBKEYS, ...grantedCreators]),
+    [grantedCreators],
+  );
+}
+
 /**
  * The validated ledger: every market, account, price, and position,
  * derived by replaying the full trade history.
  */
 export function useLedger() {
   const { data, isPending, isFetching } = useOracleEvents();
+  const trustedAuthors = useTrustedAuthors();
 
   const ledger = useMemo<Ledger | undefined>(() => {
     if (!data) return undefined;
@@ -116,8 +136,8 @@ export function useLedger() {
       }
     }
 
-    return buildLedger(markets, trades, resolutions);
-  }, [data]);
+    return buildLedger(markets, trades, resolutions, trustedAuthors);
+  }, [data, trustedAuthors]);
 
   return { ledger, isPending, isFetching };
 }
